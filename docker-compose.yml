@@ -1,0 +1,70 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    environment:
+      POSTGRES_DB: colomboflow
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: colombo123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+      
+  timescaledb:
+    image: timescale/timescaledb-ha:pg15-latest
+    environment:
+      POSTGRES_DB: colombo_ts
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: colombo123
+    ports:
+      - "5433:5432"
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    env_file: ./server/.env
+    environment:
+      - DATABASE_URL=postgres://admin:colombo123@postgres:5432/colomboflow
+      - TIMESCALEDB_URL=postgres://admin:colombo123@timescaledb:5432/colombo_ts
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - timescaledb
+      - redis
+    ports:
+      - "3001:3001"
+
+  ml:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - client
+      - api
+      - ml
+
+volumes:
+  pgdata:
