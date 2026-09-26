@@ -1,0 +1,17 @@
+# +required The configuration file schema version
+schemaVersion: 1.2
+
+# +optional Incoming connection details for the component
+endpoints:
+  - name: ml-service
+    displayName: ColomboFlow ML Service
+    service:
+      # Base path exposed via the gateway
+      basePath: /
+      # Port your Flask app listens on
+      port: 5000
+    # Type of traffic this endpoint accepts
+    type: REST
+    # Public so it's reachable and demonstrable outside your org
+    networkVisibilities:
+      - Public
